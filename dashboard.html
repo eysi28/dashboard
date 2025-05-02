@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="Stylesheet" href="dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+  <aside class="side-menu">
+    <div class="brand-name">
+      <img src="" alt="Brand Logo" class="aside-logo" />
+    </div>
+    <nav>
+      <span class="active">Dashboard</span>
+      <span>Booking</span>
+      <span>Setting</span>
+      <span>Help</span>
+    </nav>
+  </aside>
+
+  <div class="container">
+    <header class="header">
+      <div class="nav">
+        <div class="search">
+          <input type="text" id="search-input" placeholder="Search reservations..." />
+          <button class="search-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+        </div>
+        <div class="user">
+          <div class="notification-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+            <span class="notification-badge" style="display: none;">0</span>
+          </div>
+          <div class="notification-popup" style="display: none;">
+  <h4>New Bookings</h4>
+  <div class="notification-list" style="max-height: 200px; overflow-y: auto;">
+    <!-- Notifications will be dynamically added here -->
+  </div>
+</div>
+          <div class="img-case">
+            <img src="" alt="User Profile" />
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="page-title">
+        <h1>Dashboard</h1>
+        <p>Welcome back, Admin</p>
+      </div>
+      
+      <section class="cards">
+        <div class="card">
+          <div class="box">
+            <h1 id="todayBookings">0</h1>
+            <h3>Today Bookings</h3>
+          </div>
+          <div class="icon-case">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+        </div>
+        <div class="card">
+          <div class="box">
+            <h1 id="totalCustomers">0</h1>
+            <h3>Total Customers</h3>
+          </div>
+          <div class="icon-case">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-2 swipe-container">
+        <div class="swipe-wrapper">
+          <div class="recent-payments">
+            <div class="title">
+              <h2>Recent & Current Reservations</h2>
+              <div class="view-options">
+                <button id="view-all-btn" class="btn">View All</button>
+              </div>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Date</th>
+                    <th>Start time</th>
+                    <th>End time</th>
+                    <th>Table</th>
+                    <th>Guest</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody id="reservation-table-body">
+                  <!-- Data will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+            <section class="report-analysis">
+  <div class="report-header">
+    <h2>Reports & Analysis</h2>
+  </div>
+  <div class="chart-container" style="width: 100%; max-width: 700px; margin-top: 20px;">
+    <canvas id="bookingChart"></canvas>
+  </div>
+</section>
+
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  const supabaseUrl = 'https://hccnnxwcpgqzonzckkaq.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjY25ueHdjcGdxem9uemNra2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0OTk4MTksImV4cCI6MjA2MTA3NTgxOX0.6yUUdeij1frS8nGjWvBqsejq2OKE6jrbs3OtRgmBObk'; 
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  let newBookings = []; // Store new bookings
+  let hasViewedNotifications = false;
+
+  // Fetch dashboard data (today's bookings and total bookings)
+  async function fetchDashboardData() {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Add loading animation
+    document.getElementById('todayBookings').classList.add('loading');
+    document.getElementById('totalCustomers').classList.add('loading');
+
+    try {
+      // Fetch today's bookings count
+      const { count: todayCount } = await supabase
+        .from('reservations')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`);
+
+      // Fetch total bookings count
+      const { count: totalCount } = await supabase
+        .from('reservations')
+        .select('*', { count: 'exact', head: true });
+
+      // Update the dashboard with animation
+      animateCounter('todayBookings', 0, todayCount ?? 0);
+      animateCounter('totalCustomers', 0, totalCount ?? 0);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      // Remove loading state
+      setTimeout(() => {
+        document.getElementById('todayBookings').classList.remove('loading');
+        document.getElementById('totalCustomers').classList.remove('loading');
+      }, 500);
+    }
+  }
+
+  // Animate counter values
+  function animateCounter(id, start, end) {
+    const duration = 1000;
+    const element = document.getElementById(id);
+    const startTime = performance.now();
+    
+    function updateCounter(currentTime) {
+      const elapsedTime = currentTime - startTime;
+      if (elapsedTime < duration) {
+        const progress = elapsedTime / duration;
+        const current = Math.floor(start + (end - start) * progress);
+        element.textContent = current;
+        requestAnimationFrame(updateCounter);
+      } else {
+        element.textContent = end;
+      }
+    }
+    
+    requestAnimationFrame(updateCounter);
+  }
+
+  // Fetch reservations data to populate the table
+  async function loadReservations() {
+    const tbody = document.getElementById('reservation-table-body');
+    tbody.innerHTML = '<tr><td colspan="9" class="loading-cell"><div class="loading-spinner"></div></td></tr>';
+
+    try {
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Error fetching reservations:', error);
+        tbody.innerHTML = '<tr><td colspan="9" class="error-cell">Failed to load reservations</td></tr>';
+        return;
+      }
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-cell">No reservations found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      data.forEach(reservation => {
+        const row = document.createElement('tr');
+        row.className = 'data-row';
+        row.innerHTML = `
+          <td>${reservation.name || '-'}</td>
+          <td>${reservation.phone || '-'}</td>
+          <td>${reservation.email || '-'}</td>
+          <td>${reservation.date || '-'}</td>
+          <td>${reservation.start_time || '-'}</td>
+          <td>${reservation.end_time || '-'}</td>
+          <td>${reservation.table_type || '-'}</td>
+          <td>${reservation.guests || '-'}</td>
+          <td>${reservation.description || '-'}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      tbody.innerHTML = '<tr><td colspan="9" class="error-cell">An unexpected error occurred</td></tr>';
+    }
+  }
+
+  // Fetch new bookings for notifications
+  async function fetchNewBookings() {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // Getting today's date (YYYY-MM-DD)
+
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('*')
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Store new bookings
+      newBookings = data;
+
+      // Update notification badge count
+      updateNotificationBadge();
+
+      // Render notifications in the popup
+      renderNotificationPopup();
+    } catch (err) {
+      console.error('Error fetching new bookings:', err);
+    }
+  }
+
+  // Update notification badge with new bookings count
+  function updateNotificationBadge() {
+    const badge = document.querySelector('.notification-badge');
+    if (newBookings.length > 0) {
+      badge.textContent = newBookings.length; // Set the count of new bookings
+      badge.style.display = 'inline-block'; // Show it
+    } else {
+      badge.style.display = 'none'; // Hide if zero
+    }
+  }
+
+  // Render the notifications in the popup
+function renderNotificationPopup() {
+  const popup = document.querySelector('.notification-popup');
+  const list = popup.querySelector('.notification-list');
+  list.innerHTML = ''; // Clear previous notifications
+
+  if (newBookings.length === 0) {
+    list.innerHTML = '<div style="padding: 10px;">No new bookings</div>';
+    return;
+  }
+
+  const now = new Date();
+
+  // Define how many recent bookings should be marked as NEW (for example, 3 most recent bookings)
+  const recentBookingsCount = Math.min(newBookings.length, 1); // Adjust the number if needed
+
+  newBookings.forEach((n, index) => {
+    const createdDate = new Date(n.created_at).toDateString();
+    const todayDate = new Date().toDateString();
+     const isNew = createdDate === todayDate && !hasViewedNotifications;
+
+
+    const item = document.createElement('div');
+    item.style.padding = '10px';
+    item.style.borderBottom = '1px solid #eee';
+    item.style.fontSize = '14px';
+    item.style.color = '#333';
+
+    const strong = document.createElement('strong');
+    strong.textContent = n.name || 'New Booking';
+
+    // Add the "NEW" label if it's one of the recent bookings
+    if (isNew) {
+      const label = document.createElement('span');
+      label.textContent = ' NEW';
+      label.style.backgroundColor = '#ff5252';
+      label.style.color = '#fff';
+      label.style.fontSize = '10px';
+      label.style.marginLeft = '8px';
+      label.style.padding = '2px 5px';
+      label.style.borderRadius = '4px';
+      label.style.textTransform = 'uppercase';
+      strong.appendChild(label);
+    }
+
+    const small = document.createElement('small');
+    small.textContent = n.created_at || 'Date not available';
+    small.style.display = 'block';
+    small.style.marginTop = '4px';
+
+    item.appendChild(strong);
+    item.appendChild(small);
+    list.appendChild(item);
+  });
+}
+
+
+
+
+  // Toggle notification popup visibility
+  document.querySelector('.notification-icon').addEventListener('click', () => {
+  const popup = document.querySelector('.notification-popup');
+  const isPopupVisible = popup.style.display === 'block';
+
+  popup.style.display = isPopupVisible ? 'none' : 'block';
+
+  // When opening the popup
+  if (!isPopupVisible) {
+    renderNotificationPopup();
+
+    // Mark as viewed
+    hasViewedNotifications = true;
+     // Clear new bookings since they're viewed
+    updateNotificationBadge(); // Hide badge
+  }
+});
+
+
+  // Fetch new bookings every minute
+  setInterval(fetchNewBookings, 60000); // Adjust the interval time as needed
+
+  // Fetch data when the page loads
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchDashboardData();
+    loadReservations();
+    fetchNewBookings();
+  });
+  
+  document.getElementById('search-input').addEventListener('input', function (e) {
+  const query = e.target.value.toLowerCase();
+  const rows = document.querySelectorAll('#reservation-table-body tr');
+
+  rows.forEach(row => {
+    const nameCell = row.querySelector('td'); // First <td> is the name column
+    const nameText = nameCell?.textContent.toLowerCase() || '';
+
+    row.style.display = nameText.includes(query) ? '' : 'none';
+  });
+});
+  async function renderBookingChart() {
+  const { data, error } = await supabase
+    .from('reservations')
+    .select('created_at');
+
+  if (error) {
+    console.error('Error fetching chart data:', error);
+    return;
+  }
+
+  const countByDate = {};
+
+  data.forEach(r => {
+    const date = new Date(r.created_at).toISOString().split('T')[0];
+    countByDate[date] = (countByDate[date] || 0) + 1;
+  });
+
+  const labels = Object.keys(countByDate).sort();
+  const values = labels.map(date => countByDate[date]);
+
+  const ctx = document.getElementById('bookingChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Bookings Per Day',
+        data: values,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        title: {
+          display: true,
+          text: 'Reservation Trend Over Time'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+// Call it after DOM loads
+document.addEventListener('DOMContentLoaded', renderBookingChart);
+  
+
+let isViewingAll = false;
+
+document.getElementById('view-all-btn').addEventListener('click', async () => {
+  const tbody = document.getElementById('reservation-table-body');
+  const button = document.getElementById('view-all-btn');
+  tbody.innerHTML = '<tr><td colspan="9" class="loading-cell"><div class="loading-spinner"></div></td></tr>';
+
+  try {
+    const { data, error } = await supabase
+      .from('reservations')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(isViewingAll ? 10 : 1000); // Show all if not already viewing all
+
+    if (error) {
+      console.error('Error fetching reservations:', error);
+      tbody.innerHTML = '<tr><td colspan="9" class="error-cell">Failed to load reservations</td></tr>';
+      return;
+    }
+
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-cell">No reservations found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = '';
+    data.forEach(reservation => {
+      const row = document.createElement('tr');
+      row.className = 'data-row';
+      row.innerHTML = `
+        <td>${reservation.name || '-'}</td>
+        <td>${reservation.phone || '-'}</td>
+        <td>${reservation.email || '-'}</td>
+        <td>${reservation.date || '-'}</td>
+        <td>${reservation.start_time || '-'}</td>
+        <td>${reservation.end_time || '-'}</td>
+        <td>${reservation.table_type || '-'}</td>
+        <td>${reservation.guests || '-'}</td>
+        <td>${reservation.description || '-'}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    isViewingAll = !isViewingAll;
+    button.textContent = isViewingAll ? 'Show Less' : 'View All';
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    tbody.innerHTML = '<tr><td colspan="9" class="error-cell">An unexpected error occurred</td></tr>';
+  }
+});
+  
+   
+
+
+
+
+</script>
+
+      
+
+
+
+
+
+</body>
+  </html>
